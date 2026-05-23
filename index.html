@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="Finanzas"/>
+<meta name="theme-color" content="#0F172A"/>
+<link rel="manifest" href="manifest.json"/>
+<link rel="apple-touch-icon" href="icon-192.png"/>
+<title>Mis Finanzas</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet"/>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%;overflow-x:hidden}
+  body{background:#0F172A;color:#E2E8F0;font-family:'DM Sans',sans-serif;padding-bottom:90px}
+  input,select,button{font-family:'DM Sans',sans-serif}
+  .input-style{background:#0F172A;border:1px solid #334155;border-radius:10px;color:#E2E8F0;padding:11px 12px;font-size:14px;outline:none;width:100%}
+  .input-style::placeholder{color:#475569}
+  select.input-style option{background:#1E293B}
+  .btn-green{background:#22C55E;border:none;border-radius:10px;color:#fff;font-weight:700;padding:11px 16px;cursor:pointer;font-size:13px;white-space:nowrap}
+  .btn-blue{background:#3B82F6;border:none;border-radius:10px;color:#fff;font-weight:700;padding:13px;cursor:pointer;font-size:14px;width:100%;margin-top:2px}
+  .card{background:#1E293B;border-radius:14px;padding:16px;margin-bottom:0}
+  .bar-bg{background:#0F172A;border-radius:99px;height:7px}
+  .bar-fill{height:100%;border-radius:99px;transition:width 0.5s}
+  .nav-btn{flex:1;padding:10px 4px;border-radius:10px;border:none;cursor:pointer;font-size:12px;font-weight:600;transition:all 0.2s}
+  .nav-btn.active{background:#3B82F6;color:#fff}
+  .nav-btn.inactive{background:#1E293B;color:#94A3B8}
+  .del-btn{background:#FF444415;border:none;color:#F87171;border-radius:8px;width:30px;height:30px;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .flash{background:#1E293B;border-left:3px solid #38BDF8;margin:12px 16px 0;padding:10px 14px;border-radius:8px;font-size:13px;display:none}
+  .section{display:none}
+  .section.active{display:flex;flex-direction:column;gap:14px}
+  .grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:18px}
+  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .summary-card{background:#1E293B;border-radius:12px;padding:12px 8px;text-align:center}
+  .summary-label{font-size:10px;color:#64748B;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px}
+  .summary-value{font-size:14px;font-weight:700}
+  .expense-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid #0F172A}
+  .expense-row:last-child{border-bottom:none}
+  .cat-icon-box{width:36px;height:36px;border-radius:10px;background:#0F172A;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+  .tip-row{display:flex;gap:10px;margin-bottom:10px}
+  .empty-msg{text-align:center;color:#64748B;font-size:13px;padding:12px 0}
+  /* Install banner */
+  #install-banner{display:none;background:#1E3A5F;border:1px solid #3B82F6;border-radius:14px;padding:14px 16px;margin-bottom:0;align-items:center;gap:10px}
+  #install-banner.show{display:flex}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div style="background:linear-gradient(135deg,#1E3A5F 0%,#0F172A 100%);padding:24px 20px 20px;border-bottom:1px solid #1E293B">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start">
+    <div>
+      <div style="font-size:11px;color:#64748B;letter-spacing:2px;text-transform:uppercase;margin-bottom:2px">Hola, Emmanuel 👋</div>
+      <div style="font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:700;color:#F1F5F9">Mis Finanzas</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;background:#1E293B;border-radius:10px;padding:6px 10px">
+      <button onclick="changeMonth(-1)" style="background:none;border:none;color:#94A3B8;cursor:pointer;font-size:20px;padding:0;line-height:1">‹</button>
+      <span id="month-label" style="font-size:13px;font-weight:600;min-width:64px;text-align:center"></span>
+      <button onclick="changeMonth(1)" style="background:none;border:none;color:#94A3B8;cursor:pointer;font-size:20px;padding:0;line-height:1">›</button>
+    </div>
+  </div>
+  <div class="grid-3">
+    <div class="summary-card"><div class="summary-label">Ingresos</div><div class="summary-value" id="hdr-income" style="color:#22C55E">RD$0</div></div>
+    <div class="summary-card"><div class="summary-label">Gastos</div><div class="summary-value" id="hdr-expenses" style="color:#F97316">RD$0</div></div>
+    <div class="summary-card"><div class="summary-label">Balance</div><div class="summary-value" id="hdr-balance" style="color:#38BDF8">RD$0</div></div>
+  </div>
+</div>
+
+<!-- FLASH -->
+<div id="flash-msg" class="flash"></div>
+
+<!-- NAV -->
+<div style="display:flex;gap:8px;padding:14px 16px 0">
+  <button class="nav-btn active" id="nav-dashboard" onclick="showView('dashboard')">📊 Resumen</button>
+  <button class="nav-btn inactive" id="nav-gastos" onclick="showView('gastos')">➕ Gastos</button>
+  <button class="nav-btn inactive" id="nav-ajustes" onclick="showView('ajustes')">⚙️ Ajustes</button>
+</div>
+
+<div style="padding:16px 16px 0">
+
+  <!-- DASHBOARD -->
+  <div id="view-dashboard" class="section active">
+    <!-- Install banner -->
+    <div id="install-banner">
+      <span style="font-size:22px">📲</span>
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:600">Instalar como app</div>
+        <div style="font-size:11px;color:#94A3B8;margin-top:2px">Accede sin abrir el navegador</div>
+      </div>
+      <button id="install-btn" onclick="installApp()" style="background:#3B82F6;border:none;border-radius:8px;color:#fff;font-weight:700;padding:8px 14px;cursor:pointer;font-size:12px">Instalar</button>
+      <button onclick="dismissInstall()" style="background:none;border:none;color:#64748B;cursor:pointer;font-size:18px;padding:0 4px">×</button>
+    </div>
+
+    <!-- Savings goal -->
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;margin-bottom:10px">
+        <span style="font-size:13px;font-weight:600">🎯 Meta de ahorro</span>
+        <span style="font-size:13px;color:#22C55E;font-weight:700"><span id="saved-amount">RD$0</span> / <span id="goal-display">RD$500</span></span>
+      </div>
+      <div class="bar-bg"><div id="savings-bar" class="bar-fill" style="width:0%;background:#3B82F6"></div></div>
+      <div id="savings-pct" style="font-size:11px;color:#64748B;margin-top:6px">0% de tu meta este mes</div>
+    </div>
+
+    <!-- Categories -->
+    <div class="card" id="cat-section">
+      <div style="font-size:13px;font-weight:600;margin-bottom:12px">📂 Gastos por categoría</div>
+      <div id="cat-list"></div>
+    </div>
+
+    <!-- Recent -->
+    <div class="card" id="recent-section">
+      <div style="font-size:13px;font-weight:600;margin-bottom:12px">🕐 Últimos gastos</div>
+      <div id="recent-list"></div>
+    </div>
+  </div>
+
+  <!-- GASTOS -->
+  <div id="view-gastos" class="section">
+    <div class="card">
+      <div style="font-size:13px;font-weight:600;margin-bottom:12px">Registrar gasto</div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <input id="f-desc" class="input-style" placeholder="Descripción (ej: guagua a Santiago)"/>
+        <div class="grid-2">
+          <input id="f-amount" class="input-style" type="number" inputmode="decimal" placeholder="Monto (RD$)"/>
+          <input id="f-date" class="input-style" type="date"/>
+        </div>
+        <select id="f-cat" class="input-style">
+          <option value="transporte">🚌 Transporte</option>
+          <option value="datos">📱 Datos / Tech</option>
+          <option value="comida">🍽️ Comida</option>
+          <option value="universidad">📚 Universidad</option>
+          <option value="cuidado">✂️ Cuidado personal</option>
+          <option value="otro">📦 Otro</option>
+        </select>
+        <button class="btn-blue" onclick="addExpense()">+ Agregar gasto</button>
+      </div>
+    </div>
+    <div id="expense-list-card" class="card">
+      <div style="font-size:13px;font-weight:600;margin-bottom:12px">Este mes — <span id="expense-count">0</span> gastos</div>
+      <div id="expense-list"></div>
+    </div>
+  </div>
+
+  <!-- AJUSTES -->
+  <div id="view-ajustes" class="section">
+    <div class="card">
+      <div style="font-size:13px;font-weight:600;margin-bottom:4px">💰 Ingreso de este mes</div>
+      <div style="font-size:12px;color:#64748B;margin-bottom:12px">Actual: <span id="income-display">No registrado</span></div>
+      <div style="display:flex;gap:10px">
+        <input id="income-input" class="input-style" type="number" inputmode="decimal" placeholder="Ej: 3500" style="flex:1"/>
+        <button class="btn-green" onclick="saveIncome()">Guardar</button>
+      </div>
+    </div>
+    <div class="card">
+      <div style="font-size:13px;font-weight:600;margin-bottom:4px">🎯 Meta de ahorro mensual</div>
+      <div style="font-size:12px;color:#64748B;margin-bottom:12px">Actual: <span id="goal-adj-display">RD$500</span></div>
+      <div style="display:flex;gap:10px">
+        <input id="goal-input" class="input-style" type="number" inputmode="decimal" placeholder="Ej: 500" style="flex:1"/>
+        <button class="btn-green" onclick="saveGoal()">Guardar</button>
+      </div>
+    </div>
+    <div class="card">
+      <div style="font-size:13px;font-weight:600;margin-bottom:10px">💡 Consejos para ti</div>
+      <div class="tip-row"><span style="font-size:20px">🚌</span><div><div style="font-size:12px;font-weight:700;color:#94A3B8">Transporte</div><div style="font-size:12px;color:#64748B;line-height:1.5">Coordina viajes con compañeros para compartir costos.</div></div></div>
+      <div class="tip-row"><span style="font-size:20px">📱</span><div><div style="font-size:12px;font-weight:700;color:#94A3B8">Datos</div><div style="font-size:12px;color:#64748B;line-height:1.5">Usa el Wi-Fi de la universidad al máximo para ahorrar datos.</div></div></div>
+      <div class="tip-row"><span style="font-size:20px">🍽️</span><div><div style="font-size:12px;font-weight:700;color:#94A3B8">Comida</div><div style="font-size:12px;color:#64748B;line-height:1.5">Llevar merienda de casa reduce gastos fuera.</div></div></div>
+      <div class="tip-row"><span style="font-size:20px">💾</span><div><div style="font-size:12px;font-weight:700;color:#94A3B8">Ahorro</div><div style="font-size:12px;color:#64748B;line-height:1.5">Aparta tu meta apenas recibas tu beca, antes de gastar.</div></div></div>
+    </div>
+    <div class="card" style="border:1px solid #FF444430">
+      <div style="font-size:13px;font-weight:600;margin-bottom:4px;color:#F87171">🗑️ Borrar todos los datos</div>
+      <div style="font-size:12px;color:#64748B;margin-bottom:12px">Esto elimina todos tus gastos e ingresos permanentemente.</div>
+      <button onclick="clearAll()" style="background:#FF444420;border:1px solid #F8717140;border-radius:10px;color:#F87171;font-weight:700;padding:10px 16px;cursor:pointer;font-size:13px;width:100%">Borrar todo</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const CATS = [
+  {id:"transporte",label:"Transporte",icon:"🚌",color:"#F97316"},
+  {id:"datos",label:"Datos / Tech",icon:"📱",color:"#3B82F6"},
+  {id:"comida",label:"Comida",icon:"🍽️",color:"#22C55E"},
+  {id:"universidad",label:"Universidad",icon:"📚",color:"#A855F7"},
+  {id:"cuidado",label:"Cuidado personal",icon:"✂️",color:"#EC4899"},
+  {id:"otro",label:"Otro",icon:"📦",color:"#94A3B8"},
+];
+const MONTHS=["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
+
+const now=new Date();
+let cm=now.getMonth(), cy=now.getFullYear();
+
+function ld(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d;}catch{return d;}}
+function sv(k,v){localStorage.setItem(k,JSON.stringify(v));}
+
+let income=ld("ed_income",{});
+let expenses=ld("ed_expenses",[]);
+let savingsGoal=ld("ed_savingsGoal",500);
+
+function frd(n){return "RD$"+Math.round(n).toLocaleString("es-DO");}
+function mk(){return cy+"-"+cm;}
+
+let flashTimer=null;
+function flash(t){
+  const el=document.getElementById("flash-msg");
+  el.textContent=t;el.style.display="block";
+  if(flashTimer)clearTimeout(flashTimer);
+  flashTimer=setTimeout(()=>el.style.display="none",2500);
+}
+
+function showView(v){
+  ["dashboard","gastos","ajustes"].forEach(id=>{
+    document.getElementById("view-"+id).classList.toggle("active",id===v);
+    const b=document.getElementById("nav-"+id);
+    b.classList.toggle("active",id===v);
+    b.classList.toggle("inactive",id!==v);
+  });
+  render();
+}
+
+function changeMonth(d){
+  const t=new Date();
+  if(d===1&&cy===t.getFullYear()&&cm===t.getMonth())return;
+  cm+=d;
+  if(cm<0){cm=11;cy--;}
+  if(cm>11){cm=0;cy++;}
+  render();
+}
+
+function me(){
+  return expenses.filter(e=>{
+    const d=new Date(e.date+"T00:00:00");
+    return d.getMonth()===cm&&d.getFullYear()===cy;
+  });
+}
+
+function render(){
+  document.getElementById("month-label").textContent=MONTHS[cm]+" "+cy;
+  const exps=me();
+  const total=exps.reduce((s,e)=>s+e.amount,0);
+  const mi=income[mk()]||0;
+  const balance=mi-total;
+  const saved=Math.max(0,balance);
+
+  document.getElementById("hdr-income").textContent=frd(mi);
+  document.getElementById("hdr-expenses").textContent=frd(total);
+  const bel=document.getElementById("hdr-balance");
+  bel.textContent=frd(balance);
+  bel.style.color=balance>=0?"#38BDF8":"#F87171";
+
+  const pct=savingsGoal>0?Math.min(100,(saved/savingsGoal)*100):0;
+  document.getElementById("saved-amount").textContent=frd(saved);
+  document.getElementById("goal-display").textContent=frd(savingsGoal);
+  document.getElementById("savings-bar").style.width=pct+"%";
+  document.getElementById("savings-bar").style.background=pct>=100?"#22C55E":"#3B82F6";
+  document.getElementById("savings-pct").textContent=Math.round(pct)+"% de tu meta este mes";
+
+  // categories
+  const cs=document.getElementById("cat-section");
+  const cl=document.getElementById("cat-list");
+  const cts=CATS.map(c=>({...c,total:exps.filter(e=>e.category===c.id).reduce((s,e)=>s+e.amount,0)})).filter(c=>c.total>0).sort((a,b)=>b.total-a.total);
+  if(!cts.length){cs.style.display="none";}
+  else{
+    cs.style.display="";
+    cl.innerHTML=cts.map(c=>`<div style="margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+        <span style="font-size:13px">${c.icon} ${c.label}</span>
+        <span style="font-size:13px;font-weight:600">${frd(c.total)}</span>
+      </div>
+      <div class="bar-bg"><div class="bar-fill" style="width:${total>0?(c.total/total)*100:0}%;background:${c.color}"></div></div>
+    </div>`).join("");
+  }
+
+  // recent
+  const rs=document.getElementById("recent-section");
+  const rl=document.getElementById("recent-list");
+  if(!exps.length){rs.style.display="none";}
+  else{
+    rs.style.display="";
+    rl.innerHTML=exps.slice(0,5).map(e=>{
+      const cat=CATS.find(c=>c.id===e.category)||CATS[5];
+      return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+        <div class="cat-icon-box">${cat.icon}</div>
+        <div style="flex:1"><div style="font-size:13px;font-weight:500">${e.desc}</div><div style="font-size:11px;color:#64748B">${e.date}</div></div>
+        <div style="font-size:14px;font-weight:700;color:#F97316">-${frd(e.amount)}</div>
+      </div>`;
+    }).join("");
+  }
+
+  // expense list
+  const ec=document.getElementById("expense-count");
+  const elc=document.getElementById("expense-list-card");
+  ec.textContent=exps.length;
+  if(!exps.length){
+    elc.innerHTML='<div class="empty-msg">Sin gastos registrados este mes.</div>';
+  } else {
+    elc.innerHTML=`<div style="font-size:13px;font-weight:600;margin-bottom:12px">Este mes — ${exps.length} gastos</div>`+
+    exps.map(e=>{
+      const cat=CATS.find(c=>c.id===e.category)||CATS[5];
+      return `<div class="expense-row">
+        <span style="font-size:20px">${cat.icon}</span>
+        <div style="flex:1"><div style="font-size:13px;font-weight:500">${e.desc}</div><div style="font-size:11px;color:#64748B">${e.date} · ${cat.label}</div></div>
+        <div style="font-size:14px;font-weight:700;color:#F97316;margin-right:6px">-${frd(e.amount)}</div>
+        <button class="del-btn" onclick="delExp(${e.id})">×</button>
+      </div>`;
+    }).join("");
+  }
+
+  // ajustes display
+  document.getElementById("income-display").textContent=mi>0?frd(mi):"No registrado";
+  document.getElementById("goal-adj-display").textContent=frd(savingsGoal);
+}
+
+function addExpense(){
+  const desc=document.getElementById("f-desc").value.trim();
+  const amount=parseFloat(document.getElementById("f-amount").value);
+  const date=document.getElementById("f-date").value;
+  const cat=document.getElementById("f-cat").value;
+  if(!desc||isNaN(amount)||amount<=0||!date){flash("⚠️ Completa todos los campos");return;}
+  expenses.unshift({id:Date.now(),desc,amount,category:cat,date});
+  sv("ed_expenses",expenses);
+  document.getElementById("f-desc").value="";
+  document.getElementById("f-amount").value="";
+  flash("✅ Gasto registrado");
+  render();
+}
+
+function delExp(id){
+  if(!confirm("¿Eliminar este gasto?"))return;
+  expenses=expenses.filter(e=>e.id!==id);
+  sv("ed_expenses",expenses);
+  render();
+}
+
+function saveIncome(){
+  const val=parseFloat(document.getElementById("income-input").value);
+  if(isNaN(val)||val<=0){flash("⚠️ Monto inválido");return;}
+  income[mk()]=val;
+  sv("ed_income",income);
+  document.getElementById("income-input").value="";
+  flash("✅ Ingreso guardado");
+  render();
+}
+
+function saveGoal(){
+  const val=parseFloat(document.getElementById("goal-input").value);
+  if(isNaN(val)||val<=0){flash("⚠️ Meta inválida");return;}
+  savingsGoal=val;
+  sv("ed_savingsGoal",savingsGoal);
+  document.getElementById("goal-input").value="";
+  flash("✅ Meta actualizada");
+  render();
+}
+
+function clearAll(){
+  if(!confirm("¿Seguro? Esto borra TODOS tus datos permanentemente."))return;
+  localStorage.removeItem("ed_income");
+  localStorage.removeItem("ed_expenses");
+  localStorage.removeItem("ed_savingsGoal");
+  income={};expenses=[];savingsGoal=500;
+  flash("🗑️ Datos eliminados");
+  render();
+}
+
+// PWA Install
+let deferredPrompt=null;
+window.addEventListener("beforeinstallprompt",e=>{
+  e.preventDefault();
+  deferredPrompt=e;
+  document.getElementById("install-banner").classList.add("show");
+});
+window.addEventListener("appinstalled",()=>{
+  document.getElementById("install-banner").classList.remove("show");
+  flash("✅ App instalada correctamente");
+});
+function installApp(){
+  if(!deferredPrompt)return;
+  deferredPrompt.prompt();
+  deferredPrompt.userChoice.then(()=>{deferredPrompt=null;});
+  document.getElementById("install-banner").classList.remove("show");
+}
+function dismissInstall(){
+  document.getElementById("install-banner").classList.remove("show");
+}
+
+// Service Worker
+if("serviceWorker" in navigator){
+  navigator.serviceWorker.register("./sw.js").catch(()=>{});
+}
+
+// Init
+document.getElementById("f-date").value=new Date().toISOString().slice(0,10);
+render();
+</script>
+</body>
+</html>
