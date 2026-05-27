@@ -103,6 +103,12 @@
       <div id="savings-pct" style="font-size:11px;color:#64748B;margin-top:6px">0% de tu meta este mes</div>
     </div>
 
+    <!-- Budget alert -->
+    <div id="budget-alert" style="display:none;background:#1E293B;border:1px solid #F97316;border-radius:14px;padding:14px 16px;align-items:center;gap:10px">
+      <span style="font-size:22px">⚠️</span>
+      <div><div style="font-size:13px;font-weight:600;color:#F97316">Alerta de presupuesto</div><div id="budget-alert-msg" style="font-size:12px;color:#94A3B8;margin-top:2px"></div></div>
+    </div>
+
     <!-- Categories -->
     <div class="card" id="cat-section">
       <div style="font-size:13px;font-weight:600;margin-bottom:12px">📂 Gastos por categoría</div>
@@ -134,6 +140,7 @@
           <option value="cuidado">✂️ Cuidado personal</option>
           <option value="otro">📦 Otro</option>
         </select>
+        <input id="f-note" class="input-style" placeholder="Nota opcional (ej: pagué la mitad)"/>
         <button class="btn-blue" onclick="addExpense()">+ Agregar gasto</button>
       </div>
     </div>
@@ -256,6 +263,26 @@ function render(){
   document.getElementById("savings-bar").style.background=pct>=100?"#22C55E":"#3B82F6";
   document.getElementById("savings-pct").textContent=Math.round(pct)+"% de tu meta este mes";
 
+  // budget alert
+  const alertEl=document.getElementById("budget-alert");
+  const alertMsg=document.getElementById("budget-alert-msg");
+  if(mi>0){
+    const pctSpent=(total/mi)*100;
+    if(pctSpent>=100){
+      alertEl.style.display="flex";alertEl.style.borderColor="#F87171";
+      alertEl.querySelector("span").textContent="🚨";
+      alertEl.querySelector(".font-size\\:13px")||alertEl.querySelectorAll("div div")[0];
+      alertEl.querySelectorAll("div")[1].children[0].style.color="#F87171";
+      alertEl.querySelectorAll("div")[1].children[0].textContent="¡Presupuesto agotado!";
+      alertMsg.textContent=`Gastaste ${frd(total)} de ${frd(mi)} este mes.`;
+    } else if(pctSpent>=80){
+      alertEl.style.display="flex";alertEl.style.borderColor="#F97316";
+      alertEl.querySelectorAll("div")[1].children[0].style.color="#F97316";
+      alertEl.querySelectorAll("div")[1].children[0].textContent="Alerta de presupuesto";
+      alertMsg.textContent=`Llevas ${Math.round(pctSpent)}% gastado (${frd(total)} de ${frd(mi)}).`;
+    } else { alertEl.style.display="none"; }
+  } else { alertEl.style.display="none"; }
+
   // categories
   const cs=document.getElementById("cat-section");
   const cl=document.getElementById("cat-list");
@@ -282,7 +309,7 @@ function render(){
       const cat=CATS.find(c=>c.id===e.category)||CATS[5];
       return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
         <div class="cat-icon-box">${cat.icon}</div>
-        <div style="flex:1"><div style="font-size:13px;font-weight:500">${e.desc}</div><div style="font-size:11px;color:#64748B">${e.date}</div></div>
+        <div style="flex:1"><div style="font-size:13px;font-weight:500">${e.desc}</div><div style="font-size:11px;color:#64748B">${e.date}${e.note?' · '+e.note:''}</div></div>
         <div style="font-size:14px;font-weight:700;color:#F97316">-${frd(e.amount)}</div>
       </div>`;
     }).join("");
@@ -300,7 +327,7 @@ function render(){
       const cat=CATS.find(c=>c.id===e.category)||CATS[5];
       return `<div class="expense-row">
         <span style="font-size:20px">${cat.icon}</span>
-        <div style="flex:1"><div style="font-size:13px;font-weight:500">${e.desc}</div><div style="font-size:11px;color:#64748B">${e.date} · ${cat.label}</div></div>
+        <div style="flex:1"><div style="font-size:13px;font-weight:500">${e.desc}</div><div style="font-size:11px;color:#64748B">${e.date} · ${cat.label}${e.note?' · '+e.note:''}</div></div>
         <div style="font-size:14px;font-weight:700;color:#F97316;margin-right:6px">-${frd(e.amount)}</div>
         <button class="del-btn" onclick="delExp(${e.id})">×</button>
       </div>`;
@@ -317,11 +344,13 @@ function addExpense(){
   const amount=parseFloat(document.getElementById("f-amount").value);
   const date=document.getElementById("f-date").value;
   const cat=document.getElementById("f-cat").value;
+  const note=document.getElementById("f-note").value.trim();
   if(!desc||isNaN(amount)||amount<=0||!date){flash("⚠️ Completa todos los campos");return;}
-  expenses.unshift({id:Date.now(),desc,amount,category:cat,date});
+  expenses.unshift({id:Date.now(),desc,amount,category:cat,date,note});
   sv("ed_expenses",expenses);
   document.getElementById("f-desc").value="";
   document.getElementById("f-amount").value="";
+  document.getElementById("f-note").value="";
   flash("✅ Gasto registrado");
   render();
 }
